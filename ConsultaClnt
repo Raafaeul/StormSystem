@@ -1,0 +1,23 @@
+SELECT * 
+
+FROM (
+
+SELECT pg_cliente.pgcln_codigo,
+       pgcln_nome,
+       pgcln_nomefantasia,   
+       
+      (SELECT vd_notafiscalsaida.vdnfs_numeronotafiscal ||'/'|| vd_notafiscalsaida.vdnfs_serienotafiscal           
+       FROM vd_notafiscalsaida
+       WHERE pg_cliente.pgcln_codigo = vd_notafiscalsaida.pgcln_codigo            
+       ORDER BY vdnfs_datahorasaida  DESC  
+       LIMIT 1 ) as ultimo_doc,
+        
+      (CURRENT_DATE - cast( max( vd_notafiscalsaida.vdnfs_dataemissao) as date ) ) as qtde_dia
+       
+FROM pg_cliente LEFT JOIN
+     vd_notafiscalsaida on vd_notafiscalsaida.pgcln_codigo = pg_cliente.pgcln_codigo 
+
+GROUP BY 1, 2, 3, 4 ) as t1
+
+WHERE t1.qtde_dia >= 180
+
