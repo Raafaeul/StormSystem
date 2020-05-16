@@ -1,0 +1,33 @@
+select * 
+
+from (
+
+       select pg_cliente.pgcln_codigo,
+              pgcln_nome,
+              pgcln_nomefantasia, 
+                
+              /* ULTIMO DOCUMENTO EMITIDO PARA O CLIENTE */
+              (select vd_notafiscalsaida.vdnfs_numeronotafiscal ||'/'|| vd_notafiscalsaida.vdnfs_serienotafiscal           
+               from vd_notafiscalsaida
+               where pg_cliente.pgcln_codigo = vd_notafiscalsaida.pgcln_codigo            
+               order by vdnfs_datahorasaida desc  
+               limit 1 ) as ultimo_doc,
+               
+              /* QUANTIDADE DE DIAS DESDE O ULTIMO DOCUMENTO EMITIDO */ 
+              (current_date - cast( max( vd_notafiscalsaida.vdnfs_dataemissao) as date ) ) as qtde_dia,
+      
+              /* SITUAÇÃO DO CLIENTE */
+              case when pgcln_situacao = 'A' then 'A'
+                   when pgcln_situacao = 'C' then 'A'
+                   when pgcln_situacao = 'E' then 'A'
+                   when pgcln_situacao = 'S' then 'A'
+                   when pgcln_situacao = 'V' then 'A'
+                   else 'I' end as cln_situacao
+         
+       from pg_cliente left JOIN
+            vd_notafiscalsaida on vd_notafiscalsaida.pgcln_codigo = pg_cliente.pgcln_codigo 
+     
+       group by 1, 2, 3, 4 ) as t1
+
+where t1.qtde_dia >= 180 and
+      t1.cln_situacao = 'A'
