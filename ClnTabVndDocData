@@ -1,0 +1,21 @@
+select pg_cliente.pgcln_codigo,
+
+       vdtbv_codigo,
+       
+       /* ULTIMO DOCUMENTO EMITIDO PARA O CLIENTE */
+       (select vd_notafiscalsaida.vdnfs_numeronotafiscal ||'/'|| vd_notafiscalsaida.vdnfs_serienotafiscal           
+       from vd_notafiscalsaida
+       where pg_cliente.pgcln_codigo = vd_notafiscalsaida.pgcln_codigo            
+       order by vdnfs_datahorasaida desc  
+       limit 1 ) as ultimo_doc,
+       
+       
+       (current_date - cast( max( vd_notafiscalsaida.vdnfs_dataemissao) as date ) ) as qtde_dia
+       
+       
+       
+  
+from pg_cliente left join
+     vd_notafiscalsaida on vd_notafiscalsaida.pgcln_codigo = pg_cliente.pgcln_codigo inner join
+     vd_tabelavendacliente on vd_tabelavendacliente.pgcln_codigo = pg_cliente.pgcln_codigo
+     group by 1, 2, 3
